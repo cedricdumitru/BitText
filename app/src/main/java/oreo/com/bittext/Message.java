@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -73,8 +74,9 @@ public class Message extends Activity implements View.OnClickListener{
     int counter = 1;
     String prevHash = "0";
     List<String> list = new ArrayList<>();
-    PublicKey pubKey;
-    long lastTime = System.currentTimeMillis();
+    String secret = "1234567812345678";
+    Key key = new SecretKeySpec(secret.getBytes(), "AES");
+    long lastTime = 0;
     int times = 1;
     String privateKeyText = "MIICWwIBAAKBgQCBqExVB1Lc3RZ0nBS0YZNLs4dkZOmoTIlXGtFSiyDF93/IctJA5CPUNExAFGZ+X1j" +
             "WDO4gMMRe9n1hYMXK2UdSy5Yn5On+y38JQQqeWira6MBwoFUD8O0J27lwpA6H64WHyx0Qev1dSScTRcfB0svv2qBcN5K0L+cPY2SP" +
@@ -110,6 +112,7 @@ public class Message extends Activity implements View.OnClickListener{
                 messages.setSelection(chatArrayAdapter.getCount() - 1);
             }
         });
+        final GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
 
         db.collection("blockchain")
                 .whereEqualTo("test", "test")
@@ -125,17 +128,23 @@ public class Message extends Activity implements View.OnClickListener{
                         List<String> cities = new ArrayList<>();
                         for (DocumentSnapshot doc : value) {
                             if (doc.get("message") != null) {
+                                System.out.println(acct.getDisplayName());
                                 if(Long.parseLong(doc.get("timeStamp").toString()) > lastTime) {
-                                    if (doc.get("to").equals(recep.getText().toString())) {
-                                        System.out.println(doc.get("from"));
-                                        System.out.println(recep.getText().toString());
-                                        chatArrayAdapter.add(new ChatMessage(side, doc.get("message").toString()));
-                                        message.setText("");
-                                        side = true;
-                                    } else {
-                                        chatArrayAdapter.add(new ChatMessage(side, doc.get("message").toString()));
-                                        message.setText("");
+                                    if (doc.get("to").equals(acct.getDisplayName())) {
+
+                                        System.out.println("From: "+doc.get("from"));
+                                        System.out.println("To: "+doc.get("to"));
                                         side = false;
+                                        chatArrayAdapter.add(new ChatMessage(side, doc.get("message").toString()));
+                                        message.setText("");
+
+                                    } else {
+                                        System.out.println("From: "+doc.get("from"));
+                                        System.out.println("To: "+doc.get("to"));
+                                        side = true;
+                                        chatArrayAdapter.add(new ChatMessage(side, doc.get("message").toString()));
+                                        message.setText("");
+
                                     }
                                     lastTime = doc.getLong("timeStamp");
                                 }
@@ -156,6 +165,8 @@ public class Message extends Activity implements View.OnClickListener{
         }
     }
     private boolean addToBlock() {
+
+
         String receipient = recep.getText().toString();
         String from = "";
         if(receipient.startsWith("R")){
@@ -168,7 +179,7 @@ public class Message extends Activity implements View.OnClickListener{
         getPrevHash();
         Block block = new Block(prevHash,text, receipient, from);
         System.out.println("Block #"+counter+++" has been generated");
-        block.mineHash((int)Math.random()*100+1);
+        block.mineBlock(4,(int)Math.random()*100+1);
         Map<String, Object> addBlock = new HashMap<>();
         addBlock.put("curHash", block.getCurrentHash());
         addBlock.put("from", from);
@@ -204,4 +215,5 @@ public class Message extends Activity implements View.OnClickListener{
             }
         });
     }
+
 }

@@ -34,11 +34,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.Key;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.crypto.spec.SecretKeySpec;
 
 import static android.content.ContentValues.TAG;
 
@@ -52,6 +55,7 @@ public class HomeScreen extends Activity{
     String name;
     boolean has;
     String fileName = "blockchain";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,12 +87,11 @@ public class HomeScreen extends Activity{
             }
         });
         final List<String> chatNames = new ArrayList<>();
-        chatNames.add("Rohith K");
+        chatNames.add("Skyler Zheng");
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                 this, android.R.layout.simple_list_item_1, chatNames);
         chats.setAdapter(arrayAdapter);
         addUsers(name);
-        chatNames.add("Hello");
 
         chats.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
