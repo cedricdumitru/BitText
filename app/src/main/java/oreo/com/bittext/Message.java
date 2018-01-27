@@ -6,6 +6,7 @@ import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -27,7 +28,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.Blob;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import org.w3c.dom.Text;
@@ -71,6 +74,7 @@ public class Message extends Activity implements View.OnClickListener{
     String prevHash = "0";
     List<String> list = new ArrayList<>();
     PublicKey pubKey;
+    long lastTime = System.currentTimeMillis();
     int times = 1;
     String privateKeyText = "MIICWwIBAAKBgQCBqExVB1Lc3RZ0nBS0YZNLs4dkZOmoTIlXGtFSiyDF93/IctJA5CPUNExAFGZ+X1j" +
             "WDO4gMMRe9n1hYMXK2UdSy5Yn5On+y38JQQqeWira6MBwoFUD8O0J27lwpA6H64WHyx0Qev1dSScTRcfB0svv2qBcN5K0L+cPY2SP" +
@@ -106,17 +110,50 @@ public class Message extends Activity implements View.OnClickListener{
                 messages.setSelection(chatArrayAdapter.getCount() - 1);
             }
         });
+
+        db.collection("blockchain")
+                .whereEqualTo("test", "test")
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot value,
+                                        @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(TAG, "Listen failed.", e);
+                            return;
+                        }
+
+                        List<String> cities = new ArrayList<>();
+                        for (DocumentSnapshot doc : value) {
+                            if (doc.get("message") != null) {
+                                if(Long.parseLong(doc.get("timeStamp").toString()) > lastTime) {
+                                    if (doc.get("from").equals(recep.getText().toString())) {
+                                        chatArrayAdapter.add(new ChatMessage(side, message.getText().toString()));
+                                        message.setText("");
+                                        side = false;
+                                    } else {
+                                        chatArrayAdapter.add(new ChatMessage(side, message.getText().toString()));
+                                        message.setText("");
+                                        side = true;
+                                    }
+                                    lastTime = doc.getLong("timeStamp");
+                                }
+                                cities.add(doc.getString("message"));
+                            }
+                        }
+                        Log.d(TAG, "Current cites in CA: " + cities);
+                    }
+                });
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.send:
-               sendChatMessage();
+               addToBlock();
 
         }
     }
-    private boolean sendChatMessage() {
+    private boolean addToBlock() {
         String receipient = recep.getText().toString();
         String from = "";
         if(receipient.startsWith("R")){
@@ -136,36 +173,15 @@ public class Message extends Activity implements View.OnClickListener{
         addBlock.put("message", text);
         addBlock.put("prevHash", prevHash);
         addBlock.put("to", receipient);
+        addBlock.put("test", "test");
+        addBlock.put("timeStamp", System.currentTimeMillis());
         System.out.println(times);
-        String name = "block"+times;
+        String name = "block"+System.currentTimeMillis();
         db.collection("blockchain").document(name).set(addBlock);
-        chatArrayAdapter.add(new ChatMessage(side, message.getText().toString()));
-        message.setText("");
         //side = !side;
         return true;
     }
     public void getPrevHash(){
-        db.collection("blockchain").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot documentSnapshots) {
-                List<DocumentSnapshot> vals = documentSnapshots.getDocuments();
-                times = vals.size();
-                for (DocumentSnapshot a : vals){
-                    try {
-                        prevHash = a.get("curHash").toString();
-                    }catch (NullPointerException e){
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(getApplicationContext(), "Error Getting Users", Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-    public void setMessages(){
         db.collection("blockchain").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot documentSnapshots) {
