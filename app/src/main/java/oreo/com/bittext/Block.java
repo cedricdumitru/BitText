@@ -5,14 +5,18 @@ public class Block {
     private String currentHash;
     private String previousHash;
     private String message;
+    private String recipient;
+    private String sender;
     private long timeStamp;
     private int nonce;
 
-    public Block(String previousHash, String message) {
+    public Block(String previousHash, String message, String recipient, String sender) {
         this.previousHash = previousHash;
         this.message = message;
         this.timeStamp = System.currentTimeMillis();
         this.currentHash = generateHash();
+        this.recipient = recipient;
+        this.sender = sender;
 
     }
 

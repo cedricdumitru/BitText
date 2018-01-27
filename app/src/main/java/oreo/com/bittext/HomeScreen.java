@@ -2,15 +2,20 @@ package oreo.com.bittext;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -25,6 +30,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,11 +51,23 @@ public class HomeScreen extends Activity{
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     String name;
     boolean has;
+    String fileName = "blockchain";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_screen);
+        GenKeys gk = new GenKeys();
+        gk.generateKeyPair();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+        String publicKey = new String(Base64.encode(gk.publicKey.getEncoded(), 0));
+        String privateKey = new String(Base64.encode(gk.privateKey.getEncoded(), 0));
+      //  if(!(preferences.getString("public", "") !=null)) {
+            editor.putString("public", publicKey);
+            editor.putString("private", privateKey);
+            editor.apply();
+       // }
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
         name = acct.getDisplayName();
         header = (TextView)findViewById(R.id.header);
@@ -80,26 +102,36 @@ public class HomeScreen extends Activity{
     }
     public void addUsers(final String name){
         has = true;
-        DocumentReference docRef = db.collection("users").document(name);
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+        db.collection("users").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document != null) {
-                        Log.d(TAG, "DocumentSnapshot data: " + task.getResult().getData());
-                        has = false;
-                    } else {
-
+            public void onSuccess(QuerySnapshot documentSnapshots) {
+                List<DocumentSnapshot> vals = documentSnapshots.getDocuments();
+                for (DocumentSnapshot a : vals){
+                    try {
+                        String temp = a.get("username").toString();
+                        System.out.println(temp);
+                        if (temp.equals(name)) {
+                            has = false;
+                            break;
+                        }
+                    }catch (NullPointerException e){
+                        e.printStackTrace();
                     }
-                } else {
-                    Log.d(TAG, "get failed with ", task.getException());
                 }
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(getApplicationContext(), "Error Getting Users", Toast.LENGTH_LONG).show();
             }
         });
         if(!has) return;
         Map<String, Object> user = new HashMap<>();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
         user.put("username", name);
+        user.put("public", preferences.getString("public" , ""));
         db.collection("users").document(""+name)
                 .set(user)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -115,5 +147,6 @@ public class HomeScreen extends Activity{
                     }
                 });
     }
+
 
 }
