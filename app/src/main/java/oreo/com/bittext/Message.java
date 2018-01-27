@@ -126,14 +126,16 @@ public class Message extends Activity implements View.OnClickListener{
                         for (DocumentSnapshot doc : value) {
                             if (doc.get("message") != null) {
                                 if(Long.parseLong(doc.get("timeStamp").toString()) > lastTime) {
-                                    if (doc.get("from").equals(recep.getText().toString())) {
-                                        chatArrayAdapter.add(new ChatMessage(side, message.getText().toString()));
-                                        message.setText("");
-                                        side = false;
-                                    } else {
-                                        chatArrayAdapter.add(new ChatMessage(side, message.getText().toString()));
+                                    if (doc.get("to").equals(recep.getText().toString())) {
+                                        System.out.println(doc.get("from"));
+                                        System.out.println(recep.getText().toString());
+                                        chatArrayAdapter.add(new ChatMessage(side, doc.get("message").toString()));
                                         message.setText("");
                                         side = true;
+                                    } else {
+                                        chatArrayAdapter.add(new ChatMessage(side, doc.get("message").toString()));
+                                        message.setText("");
+                                        side = false;
                                     }
                                     lastTime = doc.getLong("timeStamp");
                                 }
