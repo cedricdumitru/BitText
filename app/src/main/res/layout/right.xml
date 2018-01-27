@@ -10,12 +10,15 @@
         android:layout_gravity="right"
         android:layout_marginBottom="8dp"
         android:layout_marginLeft="20dp"
-        android:background="@drawable/rounded_rectangle_orange"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/rounded_rectangle_blue"
         android:paddingBottom="5dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
         android:paddingTop="5dp"
-        android:textSize="25dp"
         android:text="Sample"
-        android:textColor="#FFFFFF" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Light.SearchResult.Subtitle"
+        android:textColor="#FFFFFF"
+        android:textSize="25dp" />
 </LinearLayout>
