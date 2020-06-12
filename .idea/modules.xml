@@ -3,9 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BitText.iml" filepath="$PROJECT_DIR$/BitText.iml" />
-      <module fileurl="file://C:\Users\skyle\BitText\BitText.iml" filepath="C:\Users\skyle\BitText\BitText.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Users\skyle\BitText\app\app.iml" filepath="C:\Users\skyle\BitText\app\app.iml" />
     </modules>
   </component>
 </project>

@@ -71,7 +71,7 @@ public class LoginActivity extends Activity implements View.OnClickListener{
 
 
         mVideoView = (VideoView) findViewById(R.id.videoView3);
-        mVideoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.login_background));
+        mVideoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.v2_background));
         mVideoView.start();
 
         mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener()
